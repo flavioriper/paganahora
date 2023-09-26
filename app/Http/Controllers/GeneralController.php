@@ -40,6 +40,11 @@ class GeneralController extends Controller
 		];
 		return json_encode($jackpot);
 	}
+		public function get_winners()
+	{
+		$winner = Cache::get('pot_winners');
+		return json_encode($winner);
+	}
     private static function increment_jackpot($bet)
 	{
 		$pot_1 = $bet * 0.1;
@@ -56,9 +61,44 @@ class GeneralController extends Controller
 	{
 		Cache::flush();
 
-		Cache::forever('pot_1', 0);
-		Cache::forever('pot_2', 0);
-		Cache::forever('pot_3', 0);
+		$pot_1 = Game::where('pot_1_win', 1)->orderBy('id', 'desc')->first();
+		$pot_2 = Game::where('pot_2_win', 1)->orderBy('id', 'desc')->first();
+		$pot_3 = Game::where('pot_3_win', 1)->orderBy('id', 'desc')->first();
+
+		if (isset($pot_1->id)) {
+				$bets = Game::where('id', '>', $pot_1->id)->whereRaw('win < bet')->sum('bet');
+				$pot_1 = $bets * 0.1;
+		} else {
+				$pot_1 = 0;
+		}
+
+		if (isset($pot_2->id)) {
+				$bets = Game::where('id', '>', $pot_2->id)->whereRaw('win < bet')->sum('bet');
+				$pot_2 = ($bets * 0.1) * 0.3;
+		} else {
+				$pot_2 = 0;
+		}
+
+		if (isset($pot_3->id)) {
+				$bets = Game::where('id', '>', $pot_3->id)->whereRaw('win < bet')->sum('bet');
+				$pot_3 = ($bets * 0.1) * 0.2;
+		} else {
+				$pot_3 = 0;
+		}
+
+		Cache::forever('pot_1', $pot_1);
+		Cache::forever('pot_2', $pot_2);
+		Cache::forever('pot_3', $pot_3);
+
+		Cache::forever('pot_1_open', false);
+		Cache::forever('pot_2_open', false);
+		Cache::forever('pot_3_open', false);
+
+		Cache::forever('pot_1_winner', false);
+		Cache::forever('pot_2_winner', false);
+		Cache::forever('pot_3_winner', false);
+
+		Cache::forever('pot_winners', ['username' => "estevanmelo87", 'prize' => 10000]);
 
 		return true;
 	}
@@ -90,6 +130,70 @@ class GeneralController extends Controller
 					$chance = $settings->chance;
 				}
 				$pro = mt_rand(1,100);
+				if (Cache::get('pot_1_open')) {
+					Cache::put('pot_1_open', false, $seconds = 10);
+					$prize = Cache::pull('pot_1');
+					$prize = floor($prize);
+					Cache::put('pot_1', 0, $seconds = 10);
+
+					$insert = DB::table('games')->insertGetId([
+						'bet' => $bet,
+						'user_id' => Auth::user()->id,
+						'type' => $r->gameType,
+						'cell_1' => $prize,
+						'cell_2' => $prize,
+						'cell_3' => $prize,
+						'win' => $prize,
+						'pot_1_win' => 1,
+						'status' => 0
+					]);
+
+					Cache::put('pot_winners', ['username' => Auth::user()->username, 'prize' => $prize], $seconds = 10);
+					return json_encode(array("type" => $r->gameType, "bet" => $bet, "game_id" => $insert, "cell_1" => $prize, "cell_2" => $prize, "cell_3" => $prize, "pot_1" => true));
+				}
+				if (Cache::get('pot_2_open')) {
+					Cache::put('pot_2_open', false, $seconds = 10);
+					$prize = Cache::pull('pot_2');
+					$prize = floor($prize);
+					Cache::put('pot_2', 0, $seconds = 10);
+
+					$insert = DB::table('games')->insertGetId([
+						'bet' => $bet,
+						'user_id' => Auth::user()->id,
+						'type' => $r->gameType,
+						'cell_1' => $prize,
+						'cell_2' => $prize,
+						'cell_3' => $prize,
+						'win' => $prize,
+						'pot_2_win' => 1,
+						'status' => 0
+					]);
+
+					Cache::put('pot_winners', ['username' => Auth::user()->username, 'prize' => $prize], $seconds = 10);
+					return json_encode(array("type" => $r->gameType, "bet" => $bet, "game_id" => $insert, "cell_1" => $prize, "cell_2" => $prize, "cell_3" => $prize, "pot_2" => true));
+				}
+				if (Cache::get('pot_3_open')) {
+					Cache::put('pot_3_open', false, $seconds = 10);
+					$prize = Cache::pull('pot_3');
+					$prize = floor($prize);
+					Cache::put('pot_3', 0, $seconds = 10);
+
+					$insert = DB::table('games')->insertGetId([
+						'bet' => $bet,
+						'user_id' => Auth::user()->id,
+						'type' => $r->gameType,
+						'cell_1' => $prize,
+						'cell_2' => $prize,
+						'cell_3' => $prize,
+						'win' => $prize,
+						'pot_3_win' => 1,
+						'status' => 0
+					]);
+
+					Cache::put('pot_winners', ['username' => Auth::user()->username, 'prize' => $prize], $seconds = 10);
+					return json_encode(array("type" => $r->gameType, "bet" => $bet, "game_id" => $insert, "cell_1" => $prize, "cell_2" => $prize, "cell_3" => $prize, "pot_3" => true));
+				}
+
 				if($pro >= $chance)
 				{
 					$multiply1 = 2;

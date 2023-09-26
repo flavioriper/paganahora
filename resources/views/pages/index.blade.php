@@ -6,21 +6,85 @@ Raspadinha Premiada - Loteria online instantânea com retirada de dinheiro em PI
 
 <style>
     .game-jackpot__card {
-        border-radius: 10px;
-        background-color: rgba(12,11,35,.8);
-        height: 200px;
         width: 100%;
-        font-size: 22px;
+        font-size: 42px;
         display: flex;
         flex-direction: column;
         color: white;
-        gap: 10px;
         justify-content: center;
         align-items: center;
+    }
+
+    .game-jackpot__card p {
+        position: absolute;
+    }
+
+    .game-jackpot__card img {
+        width: 100%;
+    }
+
+    .game-jackpotwinners > div {
+        background: rgba(24,23,43,.5);
+        padding: 10px 0;
+        border-radius: 10px;
+        color: white;
+        letter-spacing: 4px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .game-jackpotwinners > div > p {
+        position: absolute;
+        width: 1600px;
+        left: 100vw;
+        animation-name: slidein;
+        animation-delay: 10s;
+        animation-duration: 20s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+    }
+
+    .jackpot-text-winner {
+        font-size: 3em;
+        position: relative;
+        animation: neon 2s alternate infinite ease-in-out;
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        text-align: center;
+    }
+
+    @keyframes neon {
+        0%, 100% {
+            color: #53ec53; /* Cor 1 */
+            transform: scale(1);
+        }
+        33% {
+            color: #ff5733; /* Cor 2 */
+            transform: scale(1.2);
+        }
+        66% {
+            color: #339fff; /* Cor 3 */
+            transform: scale(0.8);
+        }
+    }
+
+    @keyframes slidein {
+        from {
+            left: 100vw;
+        }
+
+        to {
+            left: -100vw;
+        }
     }
 </style>
 
 <script>
+    let winners = false;
     setInterval(() => {
         let n = document.head.querySelector('meta[name="csrf-token"]');
         let url = window.location.origin + "/api/get_jackpots";
@@ -36,9 +100,26 @@ Raspadinha Premiada - Loteria online instantânea com retirada de dinheiro em PI
 
         $.ajax(settings).done(function (response) {
             const { pot_1, pot_2, pot_3 } = JSON.parse(response);
-            $('#game-jackpot-prize-1').text(pot_1.toLocaleString('pt-br', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            $('#game-jackpot-prize-2').text(pot_2.toLocaleString('pt-br', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-            $('#game-jackpot-prize-3').text(pot_3.toLocaleString('pt-br', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            $('#game-jackpot-prize-1').text(Math.floor(pot_1));
+            $('#game-jackpot-prize-2').text(Math.floor(pot_2));
+            $('#game-jackpot-prize-3').text(Math.floor(pot_3));
+        });
+        
+        url = window.location.origin + "/api/get_winners";
+        settings = {
+            "url": url,
+            "method": "GET",
+            "timeout": 0,
+            "headers": {
+                "X-CSRF-TOKEN": n.content,
+                "Content-Type": "application/json"
+            },
+        };
+
+        $.ajax(settings).done(function (response) {
+            const { username, prize } = JSON.parse(response);
+            $('#game-jackpot-winner-label').text(username);
+            $('#game-jackpot-winner-prize').text(prize.toLocaleString('pt-br', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
         });
     }, 5000);
 </script>
@@ -49,22 +130,29 @@ Raspadinha Premiada - Loteria online instantânea com retirada de dinheiro em PI
         <div class="game-jackpot__row row py-2">
             <div class="col-md-4 col-lg-4">
                 <div class="game-jackpot__card">
-                    <p>R$ <span id="game-jackpot-prize-1">{{number_format(Cache::get('pot_1'), 2, ',', '.')}}</span></p>
-                    <p>POTE 1</p>
+                    <img border="0" src="/storage/img/jackpot-golden.png">
+                    <p style="color: #C59B45;">R$ <span id="game-jackpot-prize-1">{{floor(Cache::get('pot_1'))}}</span></p>
                 </div>
             </div>
             <div class="col-md-4 col-lg-4">
                 <div class="game-jackpot__card">
-                    <p>R$ <span id="game-jackpot-prize-2">{{number_format(Cache::get('pot_2'), 2, ',', '.')}}</span></p>
-                    <p>POTE 2</p>
+                    <img border="0" src="/storage/img/jackpot-silver.png">
+                    <p style="color: #737477;">R$ <span id="game-jackpot-prize-2">{{floor(Cache::get('pot_2'))}}</span></p>
                 </div>
             </div>
             <div class="col-md-4 col-lg-4">
                 <div class="game-jackpot__card">
-                    <p>R$ <span id="game-jackpot-prize-3">{{number_format(Cache::get('pot_3'), 2, ',', '.')}}</span></p>
-                    <p>POTE 3</p>
+                    <img border="0" src="/storage/img/jackpot-bronze.png">
+                    <p style="color: #A76E2F;">R$ <span id="game-jackpot-prize-3">{{floor(Cache::get('pot_3'))}}</span></p>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+<div>
+    <div class="container container_full-width game-jackpotwinners">
+        <div>
+            <p>O usuário <span id="game-jackpot-winner-label">{{Cache::get('pot_winners')['username']}}</span> foi o sortudo da vez e faturou um Jackpot premiado. Ganhou: R$ <span id="game-jackpot-winner-prize">{{number_format(Cache::get('pot_winners')['prize'], 0, ',', '.')}}</span>. Aposte agora mesmo e seja o próximo!</p>
         </div>
     </div>
 </div>
@@ -116,8 +204,8 @@ Raspadinha Premiada - Loteria online instantânea com retirada de dinheiro em PI
             </div>
         </div>
     </div>
-    <div class="game__start-window-text game__start-window-text_mid">Prêmiação: <span><span class="rate-min">4</span> até <span class="rate-max">20</span></div>
-    <div class="game__start-window-text game__start-window-text_mid">Prêmio Garantido: <span><span class="rate-gar">0</span></span></div>
+    <div class="game__start-window-text game__start-window-text_mid">Prêmiação: <span>R$ <span class="rate-min">4</span> até R$ <span class="rate-max">20</span></div>
+    <div class="game__start-window-text game__start-window-text_mid">Prêmio Garantido: <span>R$ <span class="rate-gar">0</span></span></div>
     <div class="game__start-window-button-line button-line button-line_center">
 	@if(Auth::guest())
 	<div class="game__start-window-button button-round button-round_ib modal-activate" data-modal="reg">Comece o Jogo<img src="/storage/img/icon__comet_d.png" srcset="/storage/img/icon__comet_d@2x.png 2x, /storage/img/icon__comet_d@3x.png 3x" class="game__start-window-button-icon"></div>
@@ -151,8 +239,8 @@ Raspadinha Premiada - Loteria online instantânea com retirada de dinheiro em PI
             </div>
         </div>
     </div>
-    <div class="game__start-window-text game__start-window-text_mid">Prêmiação: <span><span class="rate-min">200</span> até <span class="rate-max">1000<span></span></div>
-    <div class="game__start-window-text game__start-window-text_mid">Prêmio Garantido: <span><span class="rate-gar">10</span></span></div>
+    <div class="game__start-window-text game__start-window-text_mid">Prêmiação: <span>R$ <span class="rate-min">200</span> até R$ <span class="rate-max">1000<span></span></div>
+    <div class="game__start-window-text game__start-window-text_mid">Prêmio Garantido: <span>R$ <span class="rate-gar">10</span></span></div>
     <div class="game__start-window-button-line button-line button-line_center">
 	@if(Auth::guest())
 	<div class="game__start-window-button button-round button-round_ib modal-activate" data-modal="reg">Comece o Jogo<img src="/storage/img/icon__comet_d.png" srcset="/storage/img/icon__comet_d@2x.png 2x, /storage/img/icon__comet_d@3x.png 3x" class="game__start-window-button-icon"></div>
@@ -207,7 +295,7 @@ Raspadinha Premiada - Loteria online instantânea com retirada de dinheiro em PI
             <div class="game__start-window-block">
                 <div id="game__win-ufo" class="game__ufo"></div>
                 <div class="game__start-window">
-                    <div class="game__start-window-header">Parabéns</div>
+                    <div class="game__start-window-header" id="game-win-title">Parabéns</div>
                     <div class="game__start-window-text game__start-window-text_big">Você Ganhou <span class="val">5000</span></div>
                     <div class="game__start-window-text">Seu Prêmio foi creditado em sua carteira</div>
                     <div class="game__start-window-button-line button-line button-line_center">
@@ -371,11 +459,12 @@ Raspadinha Premiada - Loteria online instantânea com retirada de dinheiro em PI
 			
         </div>
     </div>
-</div>        <audio src="sound/start.mp3" id="sound-start"></audio>
+</div>              <audio src="sound/start.mp3" id="sound-start"></audio>
                     <audio src="sound/win.mp3" id="sound-win"></audio>
                     <audio src="sound/lose.mp3" id="sound-lose"></audio>
                     <audio src="sound/suspense.mp3" id="sound-suspense"></audio>
                     <audio src="sound/open.mp3" id="sound-open"></audio>
+                    <audio src="sound/jackpot.mp3" id="sound-jackpot"></audio>
                 </div>
             </div>
         </div>

@@ -22283,6 +22283,9 @@
 							cell_1: t.cell_1,
 							cell_2: t.cell_2,
 							cell_3: t.cell_3,
+							pot_1: t.pot_1,
+							pot_2: t.pot_2,
+							pot_3: t.pot_3,
 							step: 1
 						}, g()(".game__start-block").removeClass("visible"), g()(".game__containers-wrapper_blur").removeClass("game__containers-wrapper_blur")
 					}
@@ -22308,12 +22311,27 @@
 							case 5:
 								n = r[e(this.game.bet, this.game.cell_4)], i = this.game.cell_4, this.game.step++
 						}
+
+						let complement = '';
+						if (this.game.pot_1) {
+							n = '-1';
+							complement = '-jackpot';
+						}
+						if (this.game.pot_2) {
+							n = '-2';
+							complement = '-jackpot';
+						}
+						if (this.game.pot_3) {
+							n = '-3';
+							complement = '-jackpot';
+						}
+
 						var a = document.getElementById("scratch-win-" + t),
 							s = document.getElementById("scratch-can-" + t),
 							o = "",
 							g = screen.width,
 							A = screen.height;
-						o = g < 768 && g < A ? '<img src="storage/img/card' + n + '_vert.png" alt="" ondrag="return false" ondragdrop="return false" ondragstart="return false" class="game__win-block-bg"><div class="game__win-value-wrapper"><span class="game__win-value">R$</span><span class="game__win-value">' + i + '</span></div>' : '<img src="storage/img/card' + n + '_hor.png" alt="" ondrag="return false" ondragdrop="return false" ondragstart="return false" class="game__win-block-bg"><div class="game__win-value-wrapper"><span class="game__win-value">R$</span><span class="game__win-value">' + i + '</span></div>', s.setAttribute("data-close", !1), a.classList.add("game__win-block_open"), a.innerHTML = o
+						o = g < 768 && g < A ? '<img src="storage/img/card' + complement + n + '_vert.png" alt="" ondrag="return false" ondragdrop="return false" ondragstart="return false" class="game__win-block-bg"><div class="game__win-value-wrapper"><span class="game__win-value">R$</span><span class="game__win-value">' + i + '</span></div>' : '<img src="storage/img/card' + complement + n + '_hor.png" alt="" ondrag="return false" ondragdrop="return false" ondragstart="return false" class="game__win-block-bg"><div class="game__win-value-wrapper"><span class="game__win-value">R$</span><span class="game__win-value">' + i + '</span></div>', s.setAttribute("data-close", !1), a.classList.add("game__win-block_open"), a.innerHTML = o
 					}
 				}, {
 					key: "endGame",
@@ -22334,7 +22352,10 @@
 				}, {
 					key: "screenWin",
 					value: function(t) {
-						g()(".game__start-block").not("#screen-win").removeClass("visible"), g()("#screen-win").addClass("visible").find("span.val").html(t), g()(".game__containers-wrapper").addClass("game__containers-wrapper_blur"), this.animation.win.goToAndPlay(0, !0), g()("#sound-win")[0].play()
+						const pot = this.game.pot_1 || this.game.pot_2 || this.game.pot_3;
+						if (!pot) g()('#game-win-title').removeClass('jackpot-text-winner');
+						if (pot) g()('#game-win-title').addClass('jackpot-text-winner');
+						g()('#game-win-title').text(pot ? 'Prêmio Jackpot' : 'Parabéns'), g()(".game__start-block").not("#screen-win").removeClass("visible"), g()("#screen-win").addClass("visible").find("span.val").html(t), g()(".game__containers-wrapper").addClass("game__containers-wrapper_blur"), this.animation.win.goToAndPlay(0, !0), g()(pot ? "#sound-jackpot" : "#sound-win")[0].play()
 					}
 				}, {
 					key: "screenLose",

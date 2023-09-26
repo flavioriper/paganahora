@@ -35,6 +35,7 @@ Route::post('/api/stats', 'GeneralController@stats');
 Route::get('/api/get_drop', 'GeneralController@get_drop');
 Route::post('/api/drop', 'GeneralController@drop');
 
+Route::get('/api/get_winners', 'GeneralController@get_winners');
 Route::get('/api/get_jackpots', 'GeneralController@get_jackpots');
 
 
@@ -55,6 +56,8 @@ Route::group(['prefix' => '/admin', 'middleware' => 'Access:admin'], function() 
     Route::get('/saveSettings', 'AdminController@saveSettings'); // +
     Route::get('/lastOpen', 'AdminController@lastOpen'); // +
     Route::get('/lastWithdraw', 'AdminController@lastWithdraw'); // +
+    Route::get('/jackpot', 'AdminController@jackpot'); // +
+    Route::post('/jackpot/start-prize', 'AdminController@jackpot_prize'); // +
     Route::get('/users', 'AdminController@users'); // +
     Route::get('/users/table', 'AdminController@usersTable')->name('users.table'); // +
     Route::get('/user/{id}', 'AdminController@user'); // +

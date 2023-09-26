@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Painel de administração do Raspadinha Premiada">
     <meta name="author" content="Coderthemes">
+    <meta name="csrf-token" content="{{csrf_token()}}">
 
     <link rel="shortcut icon" href="/adminAsset/images/favicon_1.ico">
 
@@ -157,6 +158,9 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
+                    <li class="has_sub">
+                        <a href="/admin/jackpot" class="waves-effect"><i class="ti-light-bulb"></i><span> Jackpot </span></a>
                     </li>
                     <li class="has_sub ms-hover">
                         <a href="/admin/users" class="waves-effect"><i class="ti-spray"></i> <span> Lista de Usuários </span> </a>

@@ -9,9 +9,11 @@ use App\Withdraw;
 use App\Settings;
 use Carbon\Carbon;
 use Validator;
+use DB;
 use Faker\Provider\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 
 class AdminController extends Controller
 {
@@ -122,6 +124,45 @@ class AdminController extends Controller
             $live->user = User::where('id', $live->user)->first();
         }
         return view('admin.lastOrders', compact('opens'));
+    }
+
+    public function jackpot()
+    {
+        return view('admin.jackpot');
+    }
+
+    public function jackpot_prize(Request $request)
+    {
+        $pot = $request->get('pot');
+        $fake = $request->get('fake');
+
+        if ($fake) {
+            $nomes = json_decode(file_get_contents(__DIR__ . '/../../../resources/assets/nomes.json'));
+            $nomes = $nomes->nomes;
+
+            $prize = Cache::get('pot_'.$pot);
+            Cache::put('pot_'.$pot, 0, $seconds = 10);
+            Cache::put('pot_winners', ['username' => $nomes[array_rand($nomes)], 'prize' => $prize], $seconds = 10);
+            $insert = DB::table('games')->insertGetId([
+                'bet' => 2,
+                'user_id' => 0,
+                'type' => 1,
+                'cell_1' => $prize,
+                'cell_2' => $prize,
+                'cell_3' => $prize,
+                'win' => $prize,
+                'pot_1_win' => $pot === '1',
+                'pot_2_win' => $pot === '2',
+                'pot_3_win' => $pot === '3',
+                'status' => 1
+            ]);
+        }
+
+        if (!$fake) {
+            Cache::put('pot_'.$pot.'_open', true, $seconds = 10);
+        }
+
+        return json_encode(['status' => 200]);
     }
 
 
